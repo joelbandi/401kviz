@@ -1,0 +1,13 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sinatra-contrib'
+gem 'activerecord', '~> 7.0'
+gem 'sqlite3'
+gem 'dotenv'
+gem 'rack-cors'
+
+group :development, :test do
+  gem 'rspec'
+  gem 'faker'
+end

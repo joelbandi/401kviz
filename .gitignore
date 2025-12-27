@@ -1,0 +1,6 @@
+node_modules/
+dist/
+frontend/node_modules/
+backend/vendor/
+backend/.bundle/
+.DS_Store
