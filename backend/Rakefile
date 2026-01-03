@@ -1,0 +1,66 @@
+require 'sequel'
+require 'dotenv/load'
+
+namespace :db do
+  desc 'Run database migrations'
+  task :migrate, [:version] do |_t, args|
+    require_relative 'config/database'
+
+    Sequel.extension :migration
+    version = args[:version].to_i if args[:version]
+
+    Sequel::Migrator.run(DB, 'db/migrations', target: version)
+    puts "Migration #{version ? "to version #{version}" : 'to latest'} completed"
+  end
+
+  desc 'Rollback database migration'
+  task :rollback do
+    require_relative 'config/database'
+
+    Sequel.extension :migration
+
+    unless DB.table_exists?(:schema_info)
+      puts 'No migrations have been run yet. Nothing to rollback.'
+      exit 0
+    end
+
+    version = DB[:schema_info].get(:version) - 1
+
+    if version.negative?
+      puts 'Already at initial state. Nothing to rollback.'
+      exit 0
+    end
+
+    Sequel::Migrator.run(DB, 'db/migrations', target: version)
+    puts "Rolled back to version #{version}"
+  end
+
+  desc 'Reset database (drop all tables and re-migrate)'
+  task :reset do
+    require_relative 'config/database'
+
+    DB.tables.each do |table|
+      DB.drop_table(table)
+    end
+
+    Rake::Task['db:migrate'].invoke
+    puts 'Database reset complete'
+  end
+
+  desc 'Print current schema version'
+  task :version do
+    require_relative 'config/database'
+
+    if DB.table_exists?(:schema_info)
+      version = DB[:schema_info].get(:version)
+      puts "Current schema version: #{version}"
+    else
+      puts 'No migrations have been run yet'
+    end
+  end
+
+  desc 'Seed database with sample data'
+  task :seed do
+    require_relative 'db/seeds'
+  end
+end
